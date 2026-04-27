@@ -1,1 +1,508 @@
+<!DOCTYPE html>
 
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>El Pote 🇲🇽</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --mx-green:#006847;--mx-red:#CE1126;
+  --card:rgba(255,255,255,0.92);--card-border:rgba(0,0,0,0.08);
+  --text:#1A1714;--muted:#7A7570;
+  --c1bg:#D4EDDF;--c1t:#0A4228;
+  --c2bg:#E8E4F8;--c2t:#3A2E8A;
+  --c3bg:#FCE8E0;--c3t:#7A2808;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;overflow-x:hidden;background:#f0ede8}
+
+.flag-bg{position:fixed;inset:0;z-index:0;display:flex;pointer-events:none}
+.flag-stripe{flex:1;opacity:0.12}
+.sg{background:#006847}.sw{background:#aaa}.sr{background:#CE1126}
+
+.eagle{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:0;pointer-events:none;opacity:0.05;width:360px;height:360px}
+
+.page{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 1rem 5rem}
+
+header{text-align:center;padding:2rem 1rem 1.25rem}
+.flag-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.85);border:1px solid rgba(0,0,0,0.1);border-radius:100px;padding:5px 16px;font-size:11px;font-weight:600;color:var(–muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;backdrop-filter:blur(6px)}
+header h1{font-size:34px;font-weight:600;letter-spacing:-0.03em;margin-bottom:4px}
+.tagline{font-size:13px;color:var(–muted);line-height:1.5;max-width:320px;margin:0 auto 12px}
+.couple-tags{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}
+.ctag{font-size:12px;font-weight:500;padding:5px 13px;border-radius:100px}
+
+.card{background:var(–card);border:1px solid var(–card-border);border-radius:18px;padding:1.25rem;margin-bottom:1.25rem;backdrop-filter:blur(8px);box-shadow:0 2px 14px rgba(0,0,0,0.07)}
+.clabel{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(–muted);margin-bottom:1rem}
+
+.rate-bar{display:flex;align-items:center;gap:8px;background:rgba(0,104,71,0.07);border:1px solid rgba(0,104,71,0.15);border-radius:10px;padding:8px 12px;margin-bottom:1.25rem}
+.rate-icon{font-size:14px}
+.rate-label{font-size:12px;color:var(–mx-green);font-weight:500;flex:1}
+.rate-input{border:1px solid rgba(0,104,71,0.25);border-radius:8px;padding:4px 8px;font-size:14px;font-family:‘DM Mono’,monospace;font-weight:500;background:#fff;color:var(–text);width:70px;text-align:right}
+.rate-input:focus{outline:none;border-color:var(–mx-green)}
+.rate-unit{font-size:12px;color:var(–muted);font-family:‘DM Mono’,monospace}
+
+.field{margin-bottom:10px}
+.field label{font-size:12px;color:var(–muted);display:block;margin-bottom:4px}
+.field input,.field select{width:100%;border:1px solid rgba(0,0,0,0.12);border-radius:10px;padding:10px 12px;font-size:15px;font-family:‘DM Sans’,sans-serif;background:rgba(255,255,255,0.85);color:var(–text);-webkit-appearance:none;appearance:none;transition:border-color 0.15s}
+.field input:focus,.field select:focus{outline:none;border-color:var(–mx-green)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-add{width:100%;padding:13px;background:var(–mx-green);color:#fff;border:none;border-radius:12px;font-size:15px;font-family:‘DM Sans’,sans-serif;font-weight:600;cursor:pointer;transition:background 0.15s,transform 0.1s;margin-top:4px}
+.btn-add:hover{background:#00573a}
+.btn-add:active{transform:scale(0.98)}
+
+.exp-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(0,0,0,0.06)}
+.exp-item:last-child{border-bottom:none}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0}
+.exp-info{flex:1;min-width:0}
+.exp-desc{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.exp-who{font-size:11px;color:var(–muted);margin-top:2px}
+.exp-right{text-align:right;flex-shrink:0}
+.exp-mxn{font-size:15px;font-weight:600;font-family:‘DM Mono’,monospace}
+.exp-usd{font-size:11px;color:var(–muted);font-family:‘DM Mono’,monospace;margin-top:1px}
+.btn-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:20px;line-height:1;padding:0 2px;flex-shrink:0}
+.btn-del:hover{color:var(–mx-red)}
+
+.date-nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:1rem;scrollbar-width:none}
+.date-nav::-webkit-scrollbar{display:none}
+.dpill{flex-shrink:0;padding:5px 13px;border-radius:100px;font-size:12px;font-weight:500;border:1px solid rgba(0,0,0,0.1);background:rgba(255,255,255,0.7);cursor:pointer;color:var(–muted);transition:all 0.15s;font-family:‘DM Mono’,monospace}
+.dpill.on{background:var(–mx-green);color:#fff;border-color:var(–mx-green)}
+
+.bal-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1.25rem}
+.bal-item{border-radius:12px;padding:12px 8px;text-align:center}
+.bal-name{font-size:10px;font-weight:600;margin-bottom:4px;line-height:1.2}
+.bal-mxn{font-size:16px;font-weight:600;font-family:‘DM Mono’,monospace}
+.bal-usd{font-size:11px;font-family:‘DM Mono’,monospace;margin-top:2px;opacity:0.75}
+.bal-lbl{font-size:10px;margin-top:3px;opacity:0.7}
+
+.settle-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,0.03);border:1px solid rgba(0,0,0,0.06);font-size:13px;margin-bottom:6px}
+.s-from{font-weight:600;color:var(–mx-red)}
+.s-arrow{color:var(–muted);font-size:15px}
+.s-to{font-weight:600;color:var(–mx-green)}
+.s-amts{margin-left:auto;text-align:right}
+.s-mxn{font-weight:600;font-family:‘DM Mono’,monospace;font-size:13px;display:block}
+.s-usd{font-size:11px;color:var(–muted);font-family:‘DM Mono’,monospace;display:block}
+
+.total-row{display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:12px;border-top:1px solid rgba(0,0,0,0.08);font-size:13px;color:var(–muted)}
+.total-vals{text-align:right}
+.total-mxn{font-weight:600;color:var(–text);font-family:‘DM Mono’,monospace;font-size:14px;display:block}
+.total-usd{font-size:11px;color:var(–muted);font-family:‘DM Mono’,monospace;display:block}
+
+.all-even{text-align:center;padding:10px;font-size:13px;font-weight:500;color:var(–mx-green);background:rgba(0,104,71,0.08);border-radius:10px;border:1px solid rgba(0,104,71,0.15)}
+.empty{text-align:center;padding:2rem;color:var(–muted);font-size:14px}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);background:#1A1714;color:#fff;font-size:12px;font-weight:500;padding:8px 18px;border-radius:100px;z-index:100;font-family:‘DM Mono’,monospace;opacity:0;transition:opacity 0.3s;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1}
+
+.status-dot{width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block;margin-right:6px;flex-shrink:0}
+.status-dot.live{background:#00C853;box-shadow:0 0 0 3px rgba(0,200,83,0.2)}
+.status-bar{display:flex;align-items:center;justify-content:center;gap:4px;font-size:11px;color:var(–muted);margin-bottom:1rem;font-family:‘DM Mono’,monospace}
+
+.btn-clear{width:100%;padding:10px;background:none;border:1px solid rgba(206,17,38,0.25);border-radius:10px;font-size:13px;font-family:‘DM Sans’,sans-serif;color:var(–mx-red);cursor:pointer;margin-top:6px;transition:background 0.15s}
+.btn-clear:hover{background:rgba(206,17,38,0.06)}
+
+.notif-bar{display:flex;align-items:center;gap:8px;background:rgba(0,104,71,0.07);border:1px solid rgba(0,104,71,0.15);border-radius:10px;padding:8px 12px;margin-bottom:1.25rem}
+.notif-label{font-size:12px;color:var(–mx-green);font-weight:500;flex:1}
+.btn-notif{background:var(–mx-green);color:#fff;border:none;border-radius:8px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap}
+</style>
+
+</head>
+<body>
+
+<div class="flag-bg">
+  <div class="flag-stripe sg"></div>
+  <div class="flag-stripe sw"></div>
+  <div class="flag-stripe sr"></div>
+</div>
+
+<svg class="eagle" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="100" cy="148" rx="38" ry="14" fill="#555"/>
+  <ellipse cx="100" cy="140" rx="32" ry="18" fill="#333"/>
+  <rect x="86" y="98" width="28" height="48" rx="6" fill="#222"/>
+  <ellipse cx="100" cy="92" rx="24" ry="30" fill="#111"/>
+  <path d="M76 88 Q35 65 22 92 Q45 96 76 102Z" fill="#111"/>
+  <path d="M124 88 Q165 65 178 92 Q155 96 124 102Z" fill="#111"/>
+  <ellipse cx="100" cy="56" rx="13" ry="14" fill="#111"/>
+  <path d="M110 59 L120 63 L110 67Z" fill="#CE1126"/>
+  <path d="M110 64 Q132 52 142 68 Q152 84 136 90" stroke="#111" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <ellipse cx="88" cy="130" rx="13" ry="17" fill="#006847"/>
+  <ellipse cx="112" cy="130" rx="13" ry="17" fill="#006847"/>
+  <ellipse cx="100" cy="115" rx="13" ry="15" fill="#006847"/>
+</svg>
+
+<div class="toast" id="toast"></div>
+
+<div class="page">
+  <header>
+    <div class="flag-pill">🇲🇽 &nbsp;México · 26 abr – 3 may</div>
+    <h1>El Pote</h1>
+    <p class="tagline">Divide gastos en grupo de forma simple. Solo crea un grupo para tu viaje o actividad, añade los participantes y registra quién pagó cada gasto; la app calcula automáticamente quién le debe a quién, para que todo quede claro, fácil y justo para todos.</p>
+    <div class="couple-tags">
+      <span class="ctag" style="background:var(--c1bg);color:var(--c1t)">Cristy &amp; She</span>
+      <span class="ctag" style="background:var(--c2bg);color:var(--c2t)">Marilú &amp; Kiki</span>
+      <span class="ctag" style="background:var(--c3bg);color:var(--c3t)">Cele &amp; Eve</span>
+    </div>
+  </header>
+
+  <!-- Connection status -->
+
+  <div class="status-bar">
+    <span class="status-dot" id="status-dot"></span>
+    <span id="status-text">Conectando...</span>
+  </div>
+
+  <!-- Notifications -->
+
+  <div class="notif-bar">
+    <span style="font-size:14px">🔔</span>
+    <span class="notif-label">Notificaciones en tiempo real</span>
+    <button class="btn-notif" id="btn-notif" onclick="requestNotifications()">Activar</button>
+  </div>
+
+  <!-- Rate bar -->
+
+  <div class="rate-bar">
+    <span class="rate-icon">💱</span>
+    <span class="rate-label">Tipo de cambio</span>
+    <input type="number" class="rate-input" id="rate-input" value="17.78" step="0.01" min="1"/>
+    <span class="rate-unit">MXN / USD</span>
+    <a href="https://www.google.com/finance/quote/USD-MXN" target="_blank" style="flex-shrink:0;background:var(--mx-green);color:#fff;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap">Ver live ↗</a>
+  </div>
+
+  <div class="card">
+    <div class="clabel">Agregar gasto</div>
+    <div class="field">
+      <label>Descripción</label>
+      <input type="text" id="inp-desc" placeholder="Ej: Cena en La Condesa"/>
+    </div>
+    <div class="row2" style="margin-bottom:10px">
+      <div class="field" style="margin:0">
+        <label>Monto (MXN $)</label>
+        <input type="number" id="inp-amount" placeholder="0" min="1"/>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Fecha</label>
+        <select id="inp-date">
+          <option value="Sáb 26 Abr">Sáb 26 Abr</option>
+          <option value="Dom 27 Abr">Dom 27 Abr</option>
+          <option value="Lun 28 Abr">Lun 28 Abr</option>
+          <option value="Mar 29 Abr">Mar 29 Abr</option>
+          <option value="Mié 30 Abr">Mié 30 Abr</option>
+          <option value="Jue 1 May">Jue 1 May</option>
+          <option value="Vie 2 May">Vie 2 May</option>
+          <option value="Sáb 3 May">Sáb 3 May</option>
+        </select>
+      </div>
+    </div>
+    <div class="field">
+      <label>¿Quién pagó?</label>
+      <select id="inp-payer">
+        <option value="0">Cristy &amp; She</option>
+        <option value="1">Marilú &amp; Kiki</option>
+        <option value="2">Cele &amp; Eve</option>
+      </select>
+    </div>
+    <button class="btn-add" id="btn-add">+ Agregar gasto</button>
+    <button class="btn-clear" id="btn-clear">Borrar todos los gastos</button>
+  </div>
+
+  <div id="list-section" style="display:none">
+    <div class="card">
+      <div class="clabel">Gastos registrados</div>
+      <div class="date-nav" id="date-nav"></div>
+      <div id="expense-list"></div>
+    </div>
+  </div>
+
+  <div class="card" id="summary-card">
+    <div class="empty">Agrega el primer gasto para ver el balance ✈️</div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+var SUPABASE_URL = 'https://sivlplhamglvagwdqcqy.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_7VZHn2gIoiILg-fB7P3JLw_Y8DVcHxL';
+
+var COUPLES = ['Cristy & She','Marilú & Kiki','Cele & Eve'];
+var COLORS = [
+  {bg:'#D4EDDF',text:'#0A4228'},
+  {bg:'#E8E4F8',text:'#3A2E8A'},
+  {bg:'#FCE8E0',text:'#7A2808'}
+];
+var DATES = ['Sáb 26 Abr','Dom 27 Abr','Lun 28 Abr','Mar 29 Abr','Mié 30 Abr','Jue 1 May','Vie 2 May','Sáb 3 May'];
+
+var expenses = [];
+var activeDate = 'all';
+var db = null;
+
+// ── INIT SUPABASE ──
+function initSupabase() {
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  loadExpenses();
+  subscribeRealtime();
+}
+
+// ── LOAD ALL EXPENSES ──
+async function loadExpenses() {
+  try {
+    var res = await db.from('gastos').select('*').order('created_at', {ascending: true});
+    if (res.error) { setStatus(false, 'Error de conexión'); return; }
+    expenses = res.data || [];
+    setStatus(true, 'En vivo · sincronizado');
+    render();
+  } catch(e) {
+    setStatus(false, 'Sin conexión');
+  }
+}
+
+// ── REALTIME SUBSCRIPTION ──
+function subscribeRealtime() {
+  db.channel('gastos-channel')
+    .on('postgres_changes', {event: 'INSERT', schema: 'public', table: 'gastos'}, function(payload) {
+      expenses.push(payload.new);
+      render();
+      sendNotification(payload.new);
+    })
+    .on('postgres_changes', {event: 'DELETE', schema: 'public', table: 'gastos'}, function(payload) {
+      expenses = expenses.filter(function(e){ return e.id !== payload.old.id; });
+      render();
+    })
+    .subscribe(function(status) {
+      if (status === 'SUBSCRIBED') setStatus(true, 'En vivo · sincronizado');
+    });
+}
+
+// ── ADD EXPENSE ──
+document.getElementById('btn-add').addEventListener('click', async function(){
+  var desc = document.getElementById('inp-desc').value.trim();
+  var amount = parseFloat(document.getElementById('inp-amount').value);
+  var payer = parseInt(document.getElementById('inp-payer').value);
+  var date = document.getElementById('inp-date').value;
+  if (!desc) { alert('Escribe una descripción'); return; }
+  if (!amount || amount <= 0) { alert('Escribe un monto válido'); return; }
+
+  var btn = document.getElementById('btn-add');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+
+  var res = await db.from('gastos').insert([{desc:desc, amount:amount, payer:payer, date:date}]);
+
+  btn.disabled = false; btn.textContent = '+ Agregar gasto';
+
+  if (res.error) { alert('Error al guardar. Intenta de nuevo.'); return; }
+
+  document.getElementById('inp-desc').value = '';
+  document.getElementById('inp-amount').value = '';
+  showToast('✓ Gasto guardado');
+});
+
+// ── DELETE EXPENSE ──
+async function deleteExpense(id) {
+  await db.from('gastos').delete().eq('id', id);
+}
+
+// ── DELETE ALL ──
+document.getElementById('btn-clear').addEventListener('click', async function(){
+  if (expenses.length === 0) return;
+  if (confirm('¿Borrar todos los gastos? Esto no se puede deshacer.')) {
+    await db.from('gastos').delete().neq('id', 0);
+    expenses = [];
+    activeDate = 'all';
+    render();
+  }
+});
+
+// ── RATE ──
+document.getElementById('rate-input').addEventListener('change', function(){ render(); });
+function getRate() { return parseFloat(document.getElementById('rate-input').value) || 17.78; }
+
+// ── NOTIFICATIONS ──
+function requestNotifications() {
+  if (!('Notification' in window)) { showToast('Tu browser no soporta notificaciones'); return; }
+  Notification.requestPermission().then(function(perm){
+    if (perm === 'granted') {
+      document.getElementById('btn-notif').textContent = '✓ Activadas';
+      document.getElementById('btn-notif').style.background = '#555';
+      showToast('🔔 Notificaciones activadas');
+    } else {
+      showToast('Notificaciones bloqueadas en tu browser');
+    }
+  });
+}
+
+function sendNotification(gasto) {
+  if (Notification.permission !== 'granted') return;
+
+  // Compute current balance for notification body
+  var paid = [0,0,0]; var total = 0;
+  for (var i = 0; i < expenses.length; i++) {
+    paid[expenses[i].payer] += parseFloat(expenses[i].amount);
+    total += parseFloat(expenses[i].amount);
+  }
+  var share = total / 3;
+  var bal = [paid[0]-share, paid[1]-share, paid[2]-share];
+  var r = getRate();
+
+  var body = 'Pagó ' + COUPLES[gasto.payer] + ' · $' + Math.round(gasto.amount).toLocaleString('es-MX') + ' MXN ($' + (gasto.amount/r).toFixed(2) + ' USD)\n\n' +
+    'Balance:\n' +
+    COUPLES[0] + ': ' + (bal[0]>=0?'+':'') + '$' + Math.round(bal[0]).toLocaleString('es-MX') + ' MXN\n' +
+    COUPLES[1] + ': ' + (bal[1]>=0?'+':'') + '$' + Math.round(bal[1]).toLocaleString('es-MX') + ' MXN\n' +
+    COUPLES[2] + ': ' + (bal[2]>=0?'+':'') + '$' + Math.round(bal[2]).toLocaleString('es-MX') + ' MXN';
+
+  new Notification('🇲🇽 El Pote · ' + gasto.desc, {
+    body: body,
+    icon: 'https://em-content.zobj.net/source/apple/391/flag-mexico_1f1f2-1f1fd.png'
+  });
+}
+
+// ── STATUS ──
+function setStatus(live, text) {
+  document.getElementById('status-dot').className = 'status-dot' + (live ? ' live' : '');
+  document.getElementById('status-text').textContent = text;
+}
+
+// ── TOAST ──
+var toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+// ── SET DATE FILTER ──
+function setDate(d) { activeDate = d; render(); }
+
+// ── RENDER ──
+function render() {
+  var r = getRate();
+  var listSection = document.getElementById('list-section');
+  var listEl = document.getElementById('expense-list');
+  var summaryCard = document.getElementById('summary-card');
+  var dateNav = document.getElementById('date-nav');
+
+  if (expenses.length === 0) {
+    listSection.style.display = 'none';
+    summaryCard.innerHTML = '<div class="empty">Agrega el primer gasto para ver el balance ✈️</div>';
+    return;
+  }
+
+  listSection.style.display = 'block';
+
+  // Date nav
+  var usedDates = [];
+  for (var d = 0; d < DATES.length; d++) {
+    for (var e = 0; e < expenses.length; e++) {
+      if (expenses[e].date === DATES[d]) { usedDates.push(DATES[d]); break; }
+    }
+  }
+  var navHTML = '<div class="dpill' + (activeDate==='all'?' on':'') + '" onclick="setDate(\'all\')">Todos</div>';
+  for (var d = 0; d < usedDates.length; d++) {
+    var dd = usedDates[d];
+    navHTML += '<div class="dpill' + (activeDate===dd?' on':'') + '" onclick="setDate(\'' + dd + '\')">' + dd + '</div>';
+  }
+  dateNav.innerHTML = navHTML;
+
+  // Expense list
+  var filtered = activeDate === 'all' ? expenses : expenses.filter(function(e){ return e.date === activeDate; });
+  var listHTML = '';
+  if (filtered.length === 0) {
+    listHTML = '<div class="empty" style="padding:1rem">No hay gastos este día</div>';
+  } else {
+    for (var i = 0; i < filtered.length; i++) {
+      var e = filtered[i];
+      var c = COLORS[e.payer];
+      var parts = COUPLES[e.payer].split(' & ');
+      var initials = parts[0][0] + '&' + parts[1][0];
+      listHTML += '<div class="exp-item">' +
+        '<div class="avatar" style="background:' + c.bg + ';color:' + c.text + '">' + initials + '</div>' +
+        '<div class="exp-info"><div class="exp-desc">' + e.desc + '</div><div class="exp-who">Pagó ' + COUPLES[e.payer] + ' · ' + e.date + '</div></div>' +
+        '<div class="exp-right">' +
+          '<div class="exp-mxn">$' + Math.round(e.amount).toLocaleString('es-MX') + '</div>' +
+          '<div class="exp-usd">$' + (e.amount / r).toFixed(2) + ' USD</div>' +
+        '</div>' +
+        '<button class="btn-del" onclick="deleteExpense(' + e.id + ')">×</button>' +
+      '</div>';
+    }
+  }
+  listEl.innerHTML = listHTML;
+
+  // Balance
+  var paid = [0,0,0]; var total = 0;
+  for (var i = 0; i < expenses.length; i++) {
+    paid[expenses[i].payer] += parseFloat(expenses[i].amount);
+    total += parseFloat(expenses[i].amount);
+  }
+  var share = total / 3;
+  var bal = [paid[0]-share, paid[1]-share, paid[2]-share];
+
+  var balHTML = '';
+  for (var i = 0; i < 3; i++) {
+    var b = bal[i];
+    var color = b > 0.5 ? '#006847' : b < -0.5 ? '#CE1126' : '#7A7570';
+    var prefix = b > 0.5 ? '+' : '';
+    var lbl = b > 0.5 ? 'a cobrar' : b < -0.5 ? 'debe' : 'par';
+    balHTML += '<div class="bal-item" style="background:' + COLORS[i].bg + '">' +
+      '<div class="bal-name" style="color:' + COLORS[i].text + '">' + COUPLES[i] + '</div>' +
+      '<div class="bal-mxn" style="color:' + color + '">' + prefix + '$' + Math.round(Math.abs(b)).toLocaleString('es-MX') + '</div>' +
+      '<div class="bal-usd" style="color:' + color + '">' + prefix + '$' + Math.abs(b/r).toFixed(2) + ' USD</div>' +
+      '<div class="bal-lbl" style="color:' + COLORS[i].text + '">' + lbl + '</div>' +
+    '</div>';
+  }
+
+  // Settlements
+  var pos = [], neg = [];
+  for (var i = 0; i < 3; i++) {
+    if (bal[i] > 0.5) pos.push({name:COUPLES[i], val:bal[i]});
+    else if (bal[i] < -0.5) neg.push({name:COUPLES[i], val:bal[i]});
+  }
+  pos.sort(function(a,b){ return b.val-a.val; });
+  neg.sort(function(a,b){ return a.val-b.val; });
+  var pv = pos.map(function(x){ return x.val; });
+  var nv = neg.map(function(x){ return x.val; });
+  var settlements = [];
+  var pi=0, ni=0;
+  while (pi<pos.length && ni<neg.length) {
+    var amt = Math.min(pv[pi], -nv[ni]);
+    if (amt > 0.5) settlements.push({from:neg[ni].name, to:pos[pi].name, amt:amt});
+    pv[pi]-=amt; nv[ni]+=amt;
+    if (pv[pi]<0.5) pi++;
+    if (nv[ni]>-0.5) ni++;
+  }
+
+  var sHTML = settlements.length === 0
+    ? '<div class="all-even">¡Todo balanceado! 🎉</div>'
+    : settlements.map(function(s){
+        return '<div class="settle-row">' +
+          '<span class="s-from">' + s.from + '</span>' +
+          '<span class="s-arrow">→</span>' +
+          '<span class="s-to">' + s.to + '</span>' +
+          '<span class="s-amts">' +
+            '<span class="s-mxn">$' + Math.round(s.amt).toLocaleString('es-MX') + ' MXN</span>' +
+            '<span class="s-usd">$' + (s.amt/r).toFixed(2) + ' USD</span>' +
+          '</span>' +
+        '</div>';
+      }).join('');
+
+  summaryCard.innerHTML =
+    '<div class="clabel">Balance del viaje</div>' +
+    '<div class="bal-grid">' + balHTML + '</div>' +
+    '<div class="clabel" style="margin-bottom:8px">Quién le paga a quién al final</div>' +
+    sHTML +
+    '<div class="total-row"><span>Total gastado</span>' +
+      '<div class="total-vals">' +
+        '<span class="total-mxn">$' + Math.round(total).toLocaleString('es-MX') + ' MXN</span>' +
+        '<span class="total-usd">$' + (total/r).toFixed(2) + ' USD</span>' +
+      '</div>' +
+    '</div>';
+}
+
+// ── START ──
+initSupabase();
+</script>
+
+</body>
+</html>
